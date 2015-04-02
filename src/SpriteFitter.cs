@@ -58,11 +58,12 @@ namespace SpriteUtils {
 		
 		private void Concat(bool trimFrames = false) {
 			foreach(KeyValuePair<string,SpriteArray> Sprites in SpriteArrays) {
-				int TotalWidth = 0;
-				int TotalHeight = 0;
-				Bitmap[] Frames = new Bitmap[Sprites.Value.Count];
+				int TotalWidth = 0; // width of result spritesheet
+				int TotalHeight = 0; // height of result spritesheet 
+				Bitmap[] Frames = new Bitmap[Sprites.Value.Count]; //array of sprites to process
 				for(int i = 0; i < Sprites.Value.Count; i++) {
 					Bitmap frame = new Bitmap(Sprites.Value[i]);
+					// calculating dimensions of result spritesheet
 					TotalWidth += frame.Width;
 					if(TotalHeight < frame.Height) TotalHeight = frame.Height;
 					Frames[i] = frame;
@@ -80,6 +81,7 @@ namespace SpriteUtils {
 				try {
 					using(Graphics g = Graphics.FromImage(result)) {
 						int currentPos = 0;
+						// placing sprites to image
 						for(int i = 0; i < Frames.Length; i++) {
 							g.DrawImage(Frames[i], currentPos, 0);
 							currentPos += Frames[i].Width;
@@ -89,7 +91,8 @@ namespace SpriteUtils {
 					}
 				}
 				catch(Exception e) {
-					Console.WriteLine("Something gone wrong: {0}" + e.Message);
+					Console.WriteLine("Something gone wrong: {0}", e.Message);
+					Console.WriteLine("Please, feedback");
 					return;
 				}
 				result.Dispose();
