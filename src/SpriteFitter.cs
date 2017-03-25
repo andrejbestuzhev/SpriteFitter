@@ -15,20 +15,28 @@ namespace SpriteUtils {
 
 	public class SpriteFitter {
 	
-		string[] sources;
-		string[] destinations;
-		bool overwrite,trim;
-		string format;
-		Dictionary<string,SpriteArray> SpriteArrays;
+		private string[] sources;
+		private string[] destinations;
+		private bool overwrite, reverseOrder, mirror;
+		private string format;
+		private Dictionary<string,SpriteArray> SpriteArrays;
 	
-		public SpriteFitter(string[] sources, string[] destinations, string format = "PNG", bool trim = false, bool overwrite = true) {
+		public SpriteFitter(
+            string[] sources, 
+            string[] destinations, 
+            string format = "PNG", 
+            bool overwrite = true, 
+            bool reverseOrder = false, 
+            bool mirror = false
+        ) {
 			this.sources = sources;
 			this.destinations = destinations;
 			this.format = format;
-			this.trim = trim;
 			this.overwrite = overwrite;
+            this.mirror = mirror;
+            this.reverseOrder = reverseOrder;
 			
-			SpriteArrays = new Dictionary<string,SpriteArray>();
+			this.SpriteArrays = new Dictionary<string,SpriteArray>();
 		}
 		
 		public void Process() {
@@ -46,17 +54,24 @@ namespace SpriteUtils {
 		private void Collect() {
 			for(int i = 0; i < sources.Length; i++) {
 				SpriteArray sprites = new SpriteArray();
-				string[] files = Directory.GetFiles(sources[i],"*."+format.ToLower());
-				for(int f = 0; f < files.Length; f++) {
-					sprites.Add(files[f]);
-				}
+				string[] files = Directory.GetFiles(this.sources[i], "*." + this.format.ToLower());
+                if (this.reverseOrder) {
+                    for (int f = files.Length-1; f >= 0; f--) {
+                        sprites.Add(files[f]);
+                    }
+                } else {
+                    for (int f = 0; f < files.Length; f++) {
+                        sprites.Add(files[f]);
+                    }
+                }
+				
 				sprites.OutputFile = destinations[i];
-				SpriteArrays.Add(sources[i],sprites);
-				Console.WriteLine("{0} : {1} files added to sprite {2}", sources[i],sprites.Count, sprites.OutputFile);
+				this.SpriteArrays.Add(sources[i],sprites);
+				Console.WriteLine("{0} : {1} files added to sprite {2}", this.sources[i],sprites.Count, sprites.OutputFile);
 			}
 		}
 		
-		private void Concat(bool trimFrames = false) {
+		private void Concat() {
 			foreach(KeyValuePair<string,SpriteArray> Sprites in SpriteArrays) {
 				int TotalWidth = 0; // width of result spritesheet
 				int TotalHeight = 0; // height of result spritesheet 
@@ -86,6 +101,11 @@ namespace SpriteUtils {
 							g.DrawImage(Frames[i], currentPos, 0);
 							currentPos += Frames[i].Width;
 						}
+                        
+                        if (this.mirror) {
+                            result.RotateFlip(RotateFlipType.RotateNoneFlipX);
+                        }
+
 						result.Save(Sprites.Value.OutputFile,_format);
 						Console.WriteLine("{0} done",Sprites.Value.OutputFile);
 					}
@@ -102,24 +122,24 @@ namespace SpriteUtils {
 		// Check all paths
 		private bool CheckFiles() {
 			// Checking equality of output files and input directories
-			if(sources.Length != destinations.Length) {
+			if(this.sources.Length != destinations.Length) {
 				Console.WriteLine("Wrong source/destination parameters");
 				return false;
 			}
-			for(int i = 0; i < sources.Length; i++) {
+			for(int i = 0; i < this.sources.Length; i++) {
 				// Checking input directories exists
-				if(!Directory.Exists(sources[i])) {
-					Console.WriteLine("{0} path not exists",sources[i]);
+				if(!Directory.Exists(this.sources[i])) {
+					Console.WriteLine("{0} path not exists", this.sources[i]);
 					return false;
 				} else {
 					//Checking files in existing directories;
-					if(Directory.GetFiles(sources[i],"*."+format.ToLower()).Length < 2) {
-						Console.WriteLine("There are no or less than 2 files in directory {0}",sources[i]);
+					if(Directory.GetFiles(sources[i], "*." + this.format.ToLower()).Length < 2) {
+						Console.WriteLine("There are no or less than 2 files in directory {0}", this.sources[i]);
 						return false;
 					}
 				}
 				//Checking output files for existing
-				if(File.Exists(destinations[i]) && !overwrite) {
+				if(File.Exists(destinations[i]) && !this.overwrite) {
 					Console.WriteLine("{0} already exists. Use --overwrite");
 					return false;
 				}
