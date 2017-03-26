@@ -78,8 +78,13 @@ namespace SpriteUtils {
 				Bitmap[] Frames = new Bitmap[Sprites.Value.Count]; //array of sprites to process
 				for(int i = 0; i < Sprites.Value.Count; i++) {
 					Bitmap frame = new Bitmap(Sprites.Value[i]);
-					// calculating dimensions of result spritesheet
-					TotalWidth += frame.Width;
+
+                    if (this.mirror) {
+                        frame.RotateFlip(RotateFlipType.RotateNoneFlipX);
+                    }
+
+                    // calculating dimensions of result spritesheet
+                    TotalWidth += frame.Width;
 					if(TotalHeight < frame.Height) TotalHeight = frame.Height;
 					Frames[i] = frame;
 				}
@@ -102,10 +107,6 @@ namespace SpriteUtils {
 							currentPos += Frames[i].Width;
 						}
                         
-                        if (this.mirror) {
-                            result.RotateFlip(RotateFlipType.RotateNoneFlipX);
-                        }
-
 						result.Save(Sprites.Value.OutputFile,_format);
 						Console.WriteLine("{0} done",Sprites.Value.OutputFile);
 					}
